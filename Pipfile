@@ -1,0 +1,19 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+librosa = "*"
+soundfile = "*"
+ffmpeg = "*"
+pandas = "*"
+cohere = "*"
+datasets = "*"
+jupyterlab = "*"
+pydantic = {extras = ["dotenv"], version="*"}
+
+[dev-packages]
+
+[requires]
+python_version = "3.10"
