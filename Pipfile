@@ -12,6 +12,11 @@ cohere = "*"
 datasets = "*"
 jupyterlab = "*"
 pydantic = {extras = ["dotenv"], version="*"}
+python-dotenv = "*"
+pickle5 = "*"
+numpy = "*"
+scikit-learn = "*"
+tts = "*"
 
 [dev-packages]
 
