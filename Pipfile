@@ -17,6 +17,7 @@ pickle5 = "*"
 numpy = "*"
 scikit-learn = "*"
 tts = "*"
+streamlit = "*"
 
 [dev-packages]
 

@@ -10,6 +10,8 @@ import pickle5 as pickle
 from pydantic import BaseSettings, Field
 import numpy as np
 
+import streamlit as st
+
 
 class Settings(BaseSettings):
     cohere_api_key: str = Field()
@@ -43,7 +45,7 @@ def convert_audio(
     return output_file
 
 
-def tts_with_voice(text: str, voice_path: str):
+def tts_with_voice(text: str, voice_path: str) -> str:
     tts_manager = ModelManager()
     model_name = "tts_models/multilingual/multi-dataset/your_tts"
     model_path, config_path, model_item = tts_manager.download_model(model_name)
@@ -59,7 +61,9 @@ def tts_with_voice(text: str, voice_path: str):
     if not os.path.exists("output"):
         os.makedirs("output")
 
-    synthesizer.save_wav(wav, f"output/{voice_path.split('/')[-1].split('.')[0]}.wav")
+    story_file = f"output/{voice_path.split('/')[-1].split('.')[0]}.wav"
+    synthesizer.save_wav(wav, story_file)
+    return story_file
 
 
 def generate_story(morale, main_character):
@@ -104,13 +108,8 @@ def generate_story(morale, main_character):
     return generate_response.generations[0].text
 
 
-def main():
-    # Ask for file path
-    audio_file = input("Enter file path: ")
-
-    # Ask for a morale input
-    input_morale = input("Enter a morale: ")
-    input_main_character = input("Give the name of the main character: ")
+def perform_generation(audio_file, input_morale, input_main_character) -> str:
+    st.session_state.disabled = True
 
     # save with uuid
     output_file = f"voices/{uuid.uuid4()}.wav"
@@ -119,10 +118,32 @@ def main():
     convert_audio(audio_file, output_file)
 
     # Generate story
-    story = generate_story(input_morale, input_main_character)
+    story = "Once upon a time, " + generate_story(input_morale, input_main_character)
 
     # TTS with voice
-    tts_with_voice(story, output_file)
+    return tts_with_voice(story, output_file)
+
+
+def main():
+    # Ask for file path
+    with st.form("user_input"):
+        st.write("Please enter the following information")
+        audio_file = st.file_uploader("Upload a recording of your voice", type="wav")
+
+        # Ask for a morale input
+        input_morale = st.text_input("What morale would you like to convey?")
+        input_main_character = st.text_input("Give the name of the main character: ")
+
+        submitted = st.form_submit_button("Submit", disabled=st.session_state.disabled)
+        if submitted:
+            with st.spinner("Generating story..."):
+                st.session_state.disabled = True
+                story_file = perform_generation(
+                    audio_file, input_morale, input_main_character
+                )
+                st.session_state.disabled = False
+
+                st.audio(story_file)
 
 
 if __name__ == "__main__":
