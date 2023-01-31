@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "bb399eab7df6729442a2a19780cb1aacd9ca79e6cb0e7344bad261ddd16b6c3d"
+            "sha256": "2d553543757a97b57a1210a8aa4ca86867d36f886a55100e766a1a6a7aa0404e"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -2474,6 +2474,9 @@
             "version": "==0.12.0"
         },
         "torch": {
+            "extras": [
+                "cpu"
+            ],
             "hashes": [
                 "sha256:0122806b111b949d21fa1a5f9764d1fd2fcc4a47cb7f8ff914204fd4fc752ed5",
                 "sha256:0aa46f0ac95050c604bcf9ef71da9f1172e5037fdf2ebe051962d47b123848e7",
@@ -2497,7 +2500,7 @@
                 "sha256:f402ca80b66e9fbd661ed4287d7553f7f3899d9ab54bf5c67faada1555abde28",
                 "sha256:fd12043868a34a8da7d490bf6db66991108b00ffbeecb034228bfcbbd4197143"
             ],
-            "markers": "python_version >= '3.7'",
+            "index": "pypi",
             "version": "==1.13.1"
         },
         "torchaudio": {

@@ -3,6 +3,11 @@ url = "https://pypi.org/simple"
 verify_ssl = true
 name = "pypi"
 
+[[source]]
+url = "https://download.pytorch.org/whl/cu116"
+verify_ssl = true
+name = "pytorch"
+
 [packages]
 librosa = "*"
 soundfile = "*"
@@ -18,6 +23,7 @@ numpy = "*"
 scikit-learn = "*"
 tts = "*"
 streamlit = "*"
+torch = {version="1.13.1", index="pytorch", extras=["cpu"]}
 
 [dev-packages]
 
