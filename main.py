@@ -13,6 +13,9 @@ import numpy as np
 import streamlit as st
 
 
+mnt_dir = os.environ.get("MNT_DIR", "/mnt/nfs/filestore")
+
+
 class Settings(BaseSettings):
     cohere_api_key: str = Field()
 
@@ -58,10 +61,10 @@ def tts_with_voice(text: str, voice_path: str) -> str:
     )
 
     wav = synthesizer.tts(text=text, speaker_wav=voice_path, language_name="en")
-    if not os.path.exists("output"):
-        os.makedirs("output")
+    if not os.path.exists(f"{mnt_dir}/output"):
+        os.makedirs(f"{mnt_dir}/output")
 
-    story_file = f"output/{voice_path.split('/')[-1].split('.')[0]}.wav"
+    story_file = f"{mnt_dir}/output/{voice_path.split('/')[-1].split('.')[0]}.wav"
     synthesizer.save_wav(wav, story_file)
     return story_file
 
@@ -112,7 +115,7 @@ def perform_generation(audio_file, input_morale, input_main_character) -> str:
     st.session_state.disabled = True
 
     # save with uuid
-    output_file = f"voices/{uuid.uuid4()}.wav"
+    output_file = f"{mnt_dir}/voices/{uuid.uuid4()}.wav"
 
     # Convert audio file
     convert_audio(audio_file, output_file)
@@ -134,7 +137,7 @@ def main():
         input_morale = st.text_input("What morale would you like to convey?")
         input_main_character = st.text_input("Give the name of the main character: ")
 
-        submitted = st.form_submit_button("Submit", disabled=st.session_state.disabled)
+        submitted = st.form_submit_button("Submit")
         if submitted:
             with st.spinner("Generating story..."):
                 st.session_state.disabled = True

@@ -23,7 +23,7 @@ numpy = "*"
 scikit-learn = "*"
 tts = "*"
 streamlit = "*"
-torch = {version="1.13.1", index="pytorch", extras=["cpu"]}
+torch = {version="1.13.1", index="pytorch"}
 
 [dev-packages]
 
