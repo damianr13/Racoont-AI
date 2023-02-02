@@ -1,5 +1,7 @@
+import logging
 import os
 import uuid
+from typing import Tuple
 
 import cohere
 import librosa
@@ -7,13 +9,14 @@ import soundfile as sf
 from TTS.utils.manage import ModelManager
 from TTS.utils.synthesizer import Synthesizer
 import pickle5 as pickle
+from cohere.generation import Generations
 from pydantic import BaseSettings, Field
 import numpy as np
 
 import streamlit as st
+from readability import Readability
 
-
-mnt_dir = os.environ.get("MNT_DIR", "/mnt/nfs/filestore")
+mnt_dir = os.environ.get("MNT_DIR", ".")
 
 
 class Settings(BaseSettings):
@@ -69,7 +72,7 @@ def tts_with_voice(text: str, voice_path: str) -> str:
     return story_file
 
 
-def generate_story(morale, main_character):
+def launch_generation(morale, main_character):
     with open("resources/fables-with-emb.pkl", "rb") as f:
         resource = pickle.load(f)
 
@@ -96,22 +99,37 @@ def generate_story(morale, main_character):
         
         Once upon a time
     """
-    generate_response = co.generate(
+    return co.generate(
         model="command-xlarge-20221108",
         prompt=prompt,
-        max_tokens=1400,
-        temperature=1.9,
+        max_tokens=900,
+        temperature=1.4,
         k=450,
         p=0.9,
         frequency_penalty=0.25,
         presence_penalty=0.2,
         stop_sequences=[],
+        num_generations=5,
         return_likelihoods="NONE",
     )
-    return generate_response.generations[0].text
 
 
-def perform_generation(audio_file, input_morale, input_main_character) -> str:
+def generate_story(generate_response: Generations):
+    texts = [
+        g.text
+        for g in generate_response.generations
+        if len(g.text.split(" ")) >= 100 and g.text.endswith(".")
+    ]
+    if not texts:
+        # whatever, return the first one
+        print("Warn: no suitable generation found")
+        return generate_response.generations[0].text
+
+    readability_scores = [Readability(t).spache().score for t in texts]
+    return texts[np.argmax(readability_scores)]
+
+
+def perform_generation(audio_file, story) -> str:
     st.session_state.disabled = True
 
     # save with uuid
@@ -120,30 +138,67 @@ def perform_generation(audio_file, input_morale, input_main_character) -> str:
     # Convert audio file
     convert_audio(audio_file, output_file)
 
-    # Generate story
-    story = "Once upon a time, " + generate_story(input_morale, input_main_character)
-
     # TTS with voice
     return tts_with_voice(story, output_file)
 
 
 def main():
+    if "story_details_submitted" not in st.session_state:
+        st.session_state.story_details_submitted = False
+
+    if "voice_submitted" not in st.session_state:
+        st.session_state.voice_submitted = False
+
     # Ask for file path
     with st.form("user_input"):
         st.write("Please enter the following information")
-        audio_file = st.file_uploader("Upload a recording of your voice", type="wav")
 
         # Ask for a morale input
-        input_morale = st.text_input("What morale would you like to convey?")
-        input_main_character = st.text_input("Give the name of the main character: ")
+        st.session_state.input_morale = st.text_input(
+            "What morale would you like to convey?"
+        )
+        st.session_state.input_main_character = st.text_input(
+            "Give the name of the main character: "
+        )
 
         submitted = st.form_submit_button("Submit")
         if submitted:
+            st.session_state.story_details_submitted = True
+
+    if st.session_state.story_details_submitted:
+        generate_response = launch_generation(
+            st.session_state.input_morale, st.session_state.input_main_character
+        )
+        with st.form("voice_input"):
+            st.write(
+                "Provide a voice sample by reading out a story. At least 1 min."
+                "\n\n"
+                "Tip: You can read out a page from a book"
+                "\n\n"
+                "Or select the default voice."
+            )
+            st.session_state.audio_file = st.file_uploader(
+                "Upload a recording of your voice", type="wav"
+            )
+            st.session_state.default_voice = st.checkbox(
+                "Use the default voice", value=False
+            )
+            submitted = st.form_submit_button("Submit")
+
+            if submitted:
+                if st.session_state.default_voice:
+                    st.session_state.audio_file = "resources/voice.wav"
+                st.session_state.voice_submitted = True
+
+        if st.session_state.voice_submitted:
             with st.spinner("Generating story..."):
                 st.session_state.disabled = True
-                story_file = perform_generation(
-                    audio_file, input_morale, input_main_character
+                story = "Once upon a time, " + generate_story(generate_response)
+                st.write(
+                    story,
                 )
+
+                story_file = perform_generation(st.session_state.audio_file, story)
                 st.session_state.disabled = False
 
                 st.audio(story_file)

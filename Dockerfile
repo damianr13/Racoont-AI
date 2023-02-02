@@ -18,6 +18,8 @@ RUN apt-get update && apt-get install -y \
 
 COPY . ./
 RUN pip install -r requirements.txt
+
+RUN python -m nltk.downloader punkt
 # Ensure the script is executable
 RUN chmod +x /app/run.sh
 
