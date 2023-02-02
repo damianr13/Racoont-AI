@@ -18,7 +18,7 @@ https://racoont-ai-xu2xz4qutq-ew.a.run.app/
 - We use cohere embed API to find the fable with the closest morale to the input
 - The identified fable and the name of the character are used to create a prompt for the story generation
 - For each prompt we generate 5 stories and select the one with the highest score [SPACHE](https://readable.com/readability/spache-readability-formula/) score
-- Finally, we use a voice sample of 1 minute to generate a custom voice for the story with [Coqui AI TTS] (https://github.com/coqui-ai/TTS)
+- Finally, we use a voice sample of 1 minute to generate a custom voice for the story with [Coqui AI TTS](https://github.com/coqui-ai/TTS)
 
 # Deployment on GCP
 
